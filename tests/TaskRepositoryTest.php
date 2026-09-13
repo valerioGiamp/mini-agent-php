@@ -30,7 +30,7 @@ final class TaskRepositoryTest extends TestCase
     {
         $repository = new TaskRepository($this->filePath);
 
-        $repository->add('Learn Codex agents', 'high');
+        $repository->add('Learn Codex agents', 'high', '2026-09-13');
 
         $tasks = $repository->all();
 
@@ -40,6 +40,7 @@ final class TaskRepositoryTest extends TestCase
             $tasks[0]['title']
         );
         self::assertSame('high', $tasks[0]['priority']);
+        self::assertSame('2026-09-13', $tasks[0]['due_date']);
         self::assertFalse($tasks[0]['completed']);
     }
 
@@ -52,9 +53,21 @@ final class TaskRepositoryTest extends TestCase
         $tasks = $repository->all();
 
         self::assertSame('medium', $tasks[0]['priority']);
+        self::assertNull($tasks[0]['due_date']);
     }
 
-    public function testExistingTaskWithoutPriorityUsesMediumPriority(): void
+    public function testTaskCanBeAddedWithBlankDueDate(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('Learn optional dates', 'medium', '');
+
+        $tasks = $repository->all();
+
+        self::assertNull($tasks[0]['due_date']);
+    }
+
+    public function testExistingTaskWithoutPriorityOrDueDateUsesDefaults(): void
     {
         file_put_contents(
             $this->filePath,
@@ -75,6 +88,7 @@ final class TaskRepositoryTest extends TestCase
         $tasks = $repository->all();
 
         self::assertSame('medium', $tasks[0]['priority']);
+        self::assertNull($tasks[0]['due_date']);
     }
 
     public function testInvalidPriorityCannotBeAdded(): void
@@ -87,11 +101,31 @@ final class TaskRepositoryTest extends TestCase
         $repository->add('Invalid priority', 'urgent');
     }
 
+    public function testInvalidDueDateFormatCannotBeAdded(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Task due date must be a valid YYYY-MM-DD date.');
+
+        $repository->add('Invalid due date format', 'medium', '09/13/2026');
+    }
+
+    public function testInvalidDueDateCannotBeAdded(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Task due date must be a valid YYYY-MM-DD date.');
+
+        $repository->add('Invalid due date', 'medium', '2026-02-30');
+    }
+
     public function testTaskCanBeToggled(): void
     {
         $repository = new TaskRepository($this->filePath);
 
-        $repository->add('Test task', 'low');
+        $repository->add('Test task', 'low', '2026-09-14');
 
         $tasks = $repository->all();
 
@@ -101,5 +135,6 @@ final class TaskRepositoryTest extends TestCase
 
         self::assertTrue($tasks[0]['completed']);
         self::assertSame('low', $tasks[0]['priority']);
+        self::assertSame('2026-09-14', $tasks[0]['due_date']);
     }
 }

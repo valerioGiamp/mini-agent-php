@@ -34,8 +34,16 @@ final class TaskRepository
         }
 
         foreach ($tasks as &$task) {
-            if (is_array($task) && !array_key_exists('priority', $task)) {
+            if (!is_array($task)) {
+                continue;
+            }
+
+            if (!array_key_exists('priority', $task)) {
                 $task['priority'] = self::DEFAULT_PRIORITY;
+            }
+
+            if (!array_key_exists('due_date', $task) || $task['due_date'] === '') {
+                $task['due_date'] = null;
             }
         }
 
@@ -44,8 +52,11 @@ final class TaskRepository
         return $tasks;
     }
 
-    public function add(string $title, string $priority = self::DEFAULT_PRIORITY): void
-    {
+    public function add(
+        string $title,
+        string $priority = self::DEFAULT_PRIORITY,
+        ?string $dueDate = null
+    ): void {
         $title = trim($title);
         $priority = trim($priority);
 
@@ -57,12 +68,15 @@ final class TaskRepository
             throw new \InvalidArgumentException('Task priority must be low, medium, or high.');
         }
 
+        $dueDate = $this->normalizeDueDate($dueDate);
+
         $tasks = $this->all();
 
         $tasks[] = [
             'id' => bin2hex(random_bytes(8)),
             'title' => $title,
             'priority' => $priority,
+            'due_date' => $dueDate,
             'completed' => false,
         ];
 
@@ -83,6 +97,27 @@ final class TaskRepository
         unset($task);
 
         $this->save($tasks);
+    }
+
+    private function normalizeDueDate(?string $dueDate): ?string
+    {
+        $dueDate = trim($dueDate ?? '');
+
+        if ($dueDate === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate) !== 1) {
+            throw new \InvalidArgumentException('Task due date must be a valid YYYY-MM-DD date.');
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $dueDate));
+
+        if (!checkdate($month, $day, $year)) {
+            throw new \InvalidArgumentException('Task due date must be a valid YYYY-MM-DD date.');
+        }
+
+        return $dueDate;
     }
 
     private function save(array $tasks): void

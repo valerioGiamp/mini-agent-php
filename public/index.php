@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'add') {
             $repository->add(
                 $_POST['title'] ?? '',
-                $_POST['priority'] ?? 'medium'
+                $_POST['priority'] ?? 'medium',
+                $_POST['due_date'] ?? null
             );
         }
 
@@ -70,6 +71,10 @@ $tasks = $repository->all();
             <option value="high">High</option>
         </select>
 
+        <input
+            type="date"
+            name="due_date">
+
         <button type="submit">
             Add
         </button>
@@ -93,6 +98,9 @@ $tasks = $repository->all();
 
             [<?= htmlspecialchars(ucfirst($task['priority'])) ?>]
             <?= htmlspecialchars($task['title']) ?>
+            <?php if ($task['due_date'] !== null): ?>
+                (Due: <?= htmlspecialchars($task['due_date']) ?>)
+            <?php endif; ?>
         </form>
 
     <?php endforeach; ?>
