@@ -99,6 +99,19 @@ final class TaskRepository
         $this->save($tasks);
     }
 
+    public function delete(string $id): void
+    {
+        $tasks = [];
+
+        foreach ($this->all() as $task) {
+            if ($task['id'] !== $id) {
+                $tasks[] = $task;
+            }
+        }
+
+        $this->save($tasks);
+    }
+
     private function normalizeDueDate(?string $dueDate): ?string
     {
         $dueDate = trim($dueDate ?? '');

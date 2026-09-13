@@ -28,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $repository->toggle($_POST['id'] ?? '');
         }
 
+        if ($action === 'delete') {
+            $repository->delete($_POST['id'] ?? '');
+        }
+
         header('Location: /');
         exit;
     } catch (Throwable $exception) {
@@ -85,14 +89,12 @@ $tasks = $repository->all();
     <?php foreach ($tasks as $task): ?>
 
         <form method="post">
-            <input type="hidden" name="action" value="toggle">
-
             <input
                 type="hidden"
                 name="id"
                 value="<?= htmlspecialchars($task['id']) ?>">
 
-            <button type="submit">
+            <button type="submit" name="action" value="toggle">
                 <?= $task['completed'] ? '✓' : '○' ?>
             </button>
 
@@ -101,6 +103,10 @@ $tasks = $repository->all();
             <?php if ($task['due_date'] !== null): ?>
                 (Due: <?= htmlspecialchars($task['due_date']) ?>)
             <?php endif; ?>
+
+            <button type="submit" name="action" value="delete">
+                Delete
+            </button>
         </form>
 
     <?php endforeach; ?>

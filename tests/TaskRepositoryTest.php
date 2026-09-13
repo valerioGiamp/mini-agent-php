@@ -137,4 +137,38 @@ final class TaskRepositoryTest extends TestCase
         self::assertSame('low', $tasks[0]['priority']);
         self::assertSame('2026-09-14', $tasks[0]['due_date']);
     }
+
+    public function testTaskCanBeDeleted(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('First task', 'high', '2026-09-13');
+        $repository->add('Second task', 'low', '2026-09-14');
+
+        $tasks = $repository->all();
+
+        $repository->delete($tasks[0]['id']);
+
+        $tasks = $repository->all();
+
+        self::assertCount(1, $tasks);
+        self::assertSame('Second task', $tasks[0]['title']);
+        self::assertSame('low', $tasks[0]['priority']);
+        self::assertSame('2026-09-14', $tasks[0]['due_date']);
+        self::assertFalse($tasks[0]['completed']);
+    }
+
+    public function testDeletingUnknownTaskDoesNotChangeExistingTasks(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('First task', 'high', '2026-09-13');
+        $repository->add('Second task', 'medium');
+
+        $tasksBeforeDelete = $repository->all();
+
+        $repository->delete('unknown-task-id');
+
+        self::assertSame($tasksBeforeDelete, $repository->all());
+    }
 }
