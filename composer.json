@@ -1,0 +1,14 @@
+{
+    "name": "demo/mini-agent-php",
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "MiniAgentLab\\": "src/"
+        }
+    }
+}
