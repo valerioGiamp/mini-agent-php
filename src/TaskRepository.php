@@ -6,6 +6,10 @@ namespace MiniAgentLab;
 
 final class TaskRepository
 {
+    private const DEFAULT_PRIORITY = 'medium';
+
+    private const PRIORITIES = ['low', 'medium', 'high'];
+
     public function __construct(
         private readonly string $filePath
     ) {
@@ -25,15 +29,32 @@ final class TaskRepository
 
         $tasks = json_decode($content, true);
 
-        return is_array($tasks) ? $tasks : [];
+        if (!is_array($tasks)) {
+            return [];
+        }
+
+        foreach ($tasks as &$task) {
+            if (is_array($task) && !array_key_exists('priority', $task)) {
+                $task['priority'] = self::DEFAULT_PRIORITY;
+            }
+        }
+
+        unset($task);
+
+        return $tasks;
     }
 
-    public function add(string $title): void
+    public function add(string $title, string $priority = self::DEFAULT_PRIORITY): void
     {
         $title = trim($title);
+        $priority = trim($priority);
 
         if ($title === '') {
             throw new \InvalidArgumentException('Task title cannot be empty.');
+        }
+
+        if (!in_array($priority, self::PRIORITIES, true)) {
+            throw new \InvalidArgumentException('Task priority must be low, medium, or high.');
         }
 
         $tasks = $this->all();
@@ -41,6 +62,7 @@ final class TaskRepository
         $tasks[] = [
             'id' => bin2hex(random_bytes(8)),
             'title' => $title,
+            'priority' => $priority,
             'completed' => false,
         ];
 

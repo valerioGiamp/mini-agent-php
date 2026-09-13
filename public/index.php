@@ -17,7 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'add') {
-            $repository->add($_POST['title'] ?? '');
+            $repository->add(
+                $_POST['title'] ?? '',
+                $_POST['priority'] ?? 'medium'
+            );
         }
 
         if ($action === 'toggle') {
@@ -36,6 +39,7 @@ $tasks = $repository->all();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Mini Agent Lab</title>
@@ -43,50 +47,56 @@ $tasks = $repository->all();
 
 <body>
 
-<h1>Mini Agent Lab</h1>
+    <h1>Mini Agent Lab</h1>
 
-<?php if ($error !== null): ?>
-    <p>
-        <?= htmlspecialchars($error) ?>
-    </p>
-<?php endif; ?>
-
-<form method="post">
-    <input type="hidden" name="action" value="add">
-
-    <input
-        type="text"
-        name="title"
-        placeholder="New task"
-        required
-    >
-
-    <button type="submit">
-        Add
-    </button>
-</form>
-
-<hr>
-
-<?php foreach ($tasks as $task): ?>
+    <?php if ($error !== null): ?>
+        <p>
+            <?= htmlspecialchars($error) ?>
+        </p>
+    <?php endif; ?>
 
     <form method="post">
-        <input type="hidden" name="action" value="toggle">
+        <input type="hidden" name="action" value="add">
 
         <input
-            type="hidden"
-            name="id"
-            value="<?= htmlspecialchars($task['id']) ?>"
-        >
+            type="text"
+            name="title"
+            placeholder="New task"
+            required>
+
+        <select name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+        </select>
 
         <button type="submit">
-            <?= $task['completed'] ? '✓' : '○' ?>
+            Add
         </button>
-
-        <?= htmlspecialchars($task['title']) ?>
     </form>
 
-<?php endforeach; ?>
+    <hr>
+
+    <?php foreach ($tasks as $task): ?>
+
+        <form method="post">
+            <input type="hidden" name="action" value="toggle">
+
+            <input
+                type="hidden"
+                name="id"
+                value="<?= htmlspecialchars($task['id']) ?>">
+
+            <button type="submit">
+                <?= $task['completed'] ? '✓' : '○' ?>
+            </button>
+
+            [<?= htmlspecialchars(ucfirst($task['priority'])) ?>]
+            <?= htmlspecialchars($task['title']) ?>
+        </form>
+
+    <?php endforeach; ?>
 
 </body>
+
 </html>
