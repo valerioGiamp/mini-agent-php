@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $repository->add(
                 $_POST['title'] ?? '',
                 $_POST['priority'] ?? 'medium',
-                $_POST['due_date'] ?? null
+                $_POST['due_date'] ?? null,
+                $_POST['description'] ?? null
             );
         }
 
@@ -86,6 +87,10 @@ $tasks = $repository->all();
             type="date"
             name="due_date">
 
+        <textarea
+            name="description"
+            placeholder="Description"></textarea>
+
         <button type="submit">
             Add
         </button>
@@ -114,6 +119,12 @@ $tasks = $repository->all();
             <button type="submit" name="action" value="delete">
                 Delete
             </button>
+
+            <?php if ($task['description'] !== null): ?>
+                <p>
+                    <?= htmlspecialchars($task['description']) ?>
+                </p>
+            <?php endif; ?>
         </form>
 
         <form method="post">

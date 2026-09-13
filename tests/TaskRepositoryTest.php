@@ -30,7 +30,12 @@ final class TaskRepositoryTest extends TestCase
     {
         $repository = new TaskRepository($this->filePath);
 
-        $repository->add('Learn Codex agents', 'high', '2026-09-13');
+        $repository->add(
+            'Learn Codex agents',
+            'high',
+            '2026-09-13',
+            '  Practice delegation  '
+        );
 
         $tasks = $repository->all();
 
@@ -41,6 +46,7 @@ final class TaskRepositoryTest extends TestCase
         );
         self::assertSame('high', $tasks[0]['priority']);
         self::assertSame('2026-09-13', $tasks[0]['due_date']);
+        self::assertSame('Practice delegation', $tasks[0]['description']);
         self::assertFalse($tasks[0]['completed']);
     }
 
@@ -54,6 +60,7 @@ final class TaskRepositoryTest extends TestCase
 
         self::assertSame('medium', $tasks[0]['priority']);
         self::assertNull($tasks[0]['due_date']);
+        self::assertNull($tasks[0]['description']);
     }
 
     public function testTaskCanBeAddedWithBlankDueDate(): void
@@ -67,7 +74,18 @@ final class TaskRepositoryTest extends TestCase
         self::assertNull($tasks[0]['due_date']);
     }
 
-    public function testExistingTaskWithoutPriorityOrDueDateUsesDefaults(): void
+    public function testTaskCanBeAddedWithBlankDescription(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('Learn optional descriptions', 'medium', null, '   ');
+
+        $tasks = $repository->all();
+
+        self::assertNull($tasks[0]['description']);
+    }
+
+    public function testExistingTaskWithoutPriorityDueDateOrDescriptionUsesDefaults(): void
     {
         file_put_contents(
             $this->filePath,
@@ -89,6 +107,7 @@ final class TaskRepositoryTest extends TestCase
 
         self::assertSame('medium', $tasks[0]['priority']);
         self::assertNull($tasks[0]['due_date']);
+        self::assertNull($tasks[0]['description']);
     }
 
     public function testInvalidPriorityCannotBeAdded(): void
@@ -121,11 +140,21 @@ final class TaskRepositoryTest extends TestCase
         $repository->add('Invalid due date', 'medium', '2026-02-30');
     }
 
+    public function testLongDescriptionCannotBeAdded(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Task description cannot exceed 200 characters.');
+
+        $repository->add('Long description', 'medium', null, str_repeat('a', 201));
+    }
+
     public function testTaskCanBeToggled(): void
     {
         $repository = new TaskRepository($this->filePath);
 
-        $repository->add('Test task', 'low', '2026-09-14');
+        $repository->add('Test task', 'low', '2026-09-14', 'Keep this note');
 
         $tasks = $repository->all();
 
@@ -136,13 +165,14 @@ final class TaskRepositoryTest extends TestCase
         self::assertTrue($tasks[0]['completed']);
         self::assertSame('low', $tasks[0]['priority']);
         self::assertSame('2026-09-14', $tasks[0]['due_date']);
+        self::assertSame('Keep this note', $tasks[0]['description']);
     }
 
     public function testTaskTitleCanBeEdited(): void
     {
         $repository = new TaskRepository($this->filePath);
 
-        $repository->add('Original title', 'high', '2026-09-15');
+        $repository->add('Original title', 'high', '2026-09-15', 'Original details');
 
         $tasks = $repository->all();
 
@@ -155,6 +185,7 @@ final class TaskRepositoryTest extends TestCase
         self::assertSame('Updated title', $tasks[0]['title']);
         self::assertSame('high', $tasks[0]['priority']);
         self::assertSame('2026-09-15', $tasks[0]['due_date']);
+        self::assertSame('Original details', $tasks[0]['description']);
         self::assertTrue($tasks[0]['completed']);
     }
 

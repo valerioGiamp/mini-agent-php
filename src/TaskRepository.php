@@ -45,6 +45,10 @@ final class TaskRepository
             if (!array_key_exists('due_date', $task) || $task['due_date'] === '') {
                 $task['due_date'] = null;
             }
+
+            if (!array_key_exists('description', $task) || $task['description'] === '') {
+                $task['description'] = null;
+            }
         }
 
         unset($task);
@@ -55,7 +59,8 @@ final class TaskRepository
     public function add(
         string $title,
         string $priority = self::DEFAULT_PRIORITY,
-        ?string $dueDate = null
+        ?string $dueDate = null,
+        ?string $description = null
     ): void {
         $title = trim($title);
         $priority = trim($priority);
@@ -69,6 +74,7 @@ final class TaskRepository
         }
 
         $dueDate = $this->normalizeDueDate($dueDate);
+        $description = $this->normalizeDescription($description);
 
         $tasks = $this->all();
 
@@ -77,6 +83,7 @@ final class TaskRepository
             'title' => $title,
             'priority' => $priority,
             'due_date' => $dueDate,
+            'description' => $description,
             'completed' => false,
         ];
 
@@ -153,6 +160,25 @@ final class TaskRepository
         }
 
         return $dueDate;
+    }
+
+    private function normalizeDescription(?string $description): ?string
+    {
+        $description = trim($description ?? '');
+
+        if ($description === '') {
+            return null;
+        }
+
+        $descriptionLength = function_exists('mb_strlen')
+            ? mb_strlen($description)
+            : strlen($description);
+
+        if ($descriptionLength > 200) {
+            throw new \InvalidArgumentException('Task description cannot exceed 200 characters.');
+        }
+
+        return $description;
     }
 
     private function save(array $tasks): void
