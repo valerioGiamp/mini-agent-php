@@ -112,6 +112,28 @@ final class TaskRepository
         $this->save($tasks);
     }
 
+    public function updateTitle(string $id, string $title): void
+    {
+        $title = trim($title);
+
+        if ($title === '') {
+            throw new \InvalidArgumentException('Task title cannot be empty.');
+        }
+
+        $tasks = $this->all();
+
+        foreach ($tasks as &$task) {
+            if ($task['id'] === $id) {
+                $task['title'] = $title;
+                break;
+            }
+        }
+
+        unset($task);
+
+        $this->save($tasks);
+    }
+
     private function normalizeDueDate(?string $dueDate): ?string
     {
         $dueDate = trim($dueDate ?? '');

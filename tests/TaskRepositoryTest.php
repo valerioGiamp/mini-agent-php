@@ -138,6 +138,63 @@ final class TaskRepositoryTest extends TestCase
         self::assertSame('2026-09-14', $tasks[0]['due_date']);
     }
 
+    public function testTaskTitleCanBeEdited(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('Original title', 'high', '2026-09-15');
+
+        $tasks = $repository->all();
+
+        $repository->toggle($tasks[0]['id']);
+        $repository->updateTitle($tasks[0]['id'], 'Updated title');
+
+        $tasks = $repository->all();
+
+        self::assertCount(1, $tasks);
+        self::assertSame('Updated title', $tasks[0]['title']);
+        self::assertSame('high', $tasks[0]['priority']);
+        self::assertSame('2026-09-15', $tasks[0]['due_date']);
+        self::assertTrue($tasks[0]['completed']);
+    }
+
+    public function testEmptyTaskTitleCannotBeEdited(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('Original title');
+
+        $tasks = $repository->all();
+
+        try {
+            $repository->updateTitle($tasks[0]['id'], '   ');
+            self::fail('Expected empty edited task title to be rejected.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame(
+                'Task title cannot be empty.',
+                $exception->getMessage()
+            );
+        }
+
+        $tasks = $repository->all();
+
+        self::assertSame('Original title', $tasks[0]['title']);
+    }
+
+    public function testEditingUnknownTaskDoesNotChangeExistingTasks(): void
+    {
+        $repository = new TaskRepository($this->filePath);
+
+        $repository->add('First task', 'high', '2026-09-13');
+        $repository->add('Second task', 'medium');
+
+        $tasksBeforeEdit = $repository->all();
+
+        $repository->updateTitle('unknown-task-id', 'Updated title');
+
+        self::assertSame($tasksBeforeEdit, $repository->all());
+    }
+
     public function testTaskCanBeDeleted(): void
     {
         $repository = new TaskRepository($this->filePath);

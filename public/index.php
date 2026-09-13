@@ -32,6 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $repository->delete($_POST['id'] ?? '');
         }
 
+        if ($action === 'edit') {
+            $repository->updateTitle(
+                $_POST['id'] ?? '',
+                $_POST['title'] ?? ''
+            );
+        }
+
         header('Location: /');
         exit;
     } catch (Throwable $exception) {
@@ -106,6 +113,23 @@ $tasks = $repository->all();
 
             <button type="submit" name="action" value="delete">
                 Delete
+            </button>
+        </form>
+
+        <form method="post">
+            <input
+                type="hidden"
+                name="id"
+                value="<?= htmlspecialchars($task['id']) ?>">
+
+            <input
+                type="text"
+                name="title"
+                value="<?= htmlspecialchars($task['title']) ?>"
+                required>
+
+            <button type="submit" name="action" value="edit">
+                Edit
             </button>
         </form>
 
