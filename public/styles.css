@@ -132,6 +132,30 @@ textarea {
     color: #a12727;
 }
 
+.task-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.filter-link {
+    min-height: 36px;
+    border: 1px solid #c9c2b8;
+    border-radius: 7px;
+    padding: 6px 12px;
+    background: #fffdf9;
+    color: #293241;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.filter-link-active {
+    border-color: #276749;
+    background: #e7f4ed;
+    color: #276749;
+}
+
 .task-list {
     display: grid;
     gap: 16px;

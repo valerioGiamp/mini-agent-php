@@ -5,6 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use MiniAgentLab\TaskRepository;
+use MiniAgentLab\TaskFilter;
 
 $repository = new TaskRepository(
     dirname(__DIR__) . '/data/tasks.json'
@@ -15,6 +16,7 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $action = $_POST['action'] ?? '';
+        $filter = TaskFilter::normalize($_POST['filter'] ?? TaskFilter::ALL);
 
         if ($action === 'add') {
             $repository->add(
@@ -40,14 +42,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         }
 
-        header('Location: /');
+        header('Location: /' . ($filter === TaskFilter::ALL ? '' : '?filter=' . $filter));
         exit;
     } catch (Throwable $exception) {
         $error = $exception->getMessage();
     }
 }
 
+$filter = TaskFilter::normalize($_GET['filter'] ?? TaskFilter::ALL);
 $tasks = $repository->all();
+$visibleTasks = TaskFilter::apply($tasks, $filter);
+$filters = [
+    TaskFilter::ALL => 'All',
+    TaskFilter::ACTIVE => 'Active',
+    TaskFilter::COMPLETED => 'Completed',
+];
 ?>
 
 <!DOCTYPE html>
@@ -75,6 +84,10 @@ $tasks = $repository->all();
 
         <form method="post" class="task-form">
             <input type="hidden" name="action" value="add">
+            <input
+                type="hidden"
+                name="filter"
+                value="<?= htmlspecialchars($filter) ?>">
 
             <label class="field field-title">
                 <span>Task</span>
@@ -113,8 +126,19 @@ $tasks = $repository->all();
             </button>
         </form>
 
+        <nav class="task-filters" aria-label="Task filters">
+            <?php foreach ($filters as $filterValue => $filterLabel): ?>
+                <a
+                    href="<?= $filterValue === TaskFilter::ALL ? '/' : '/?filter=' . htmlspecialchars($filterValue) ?>"
+                    class="filter-link<?= $filter === $filterValue ? ' filter-link-active' : '' ?>"
+                    <?= $filter === $filterValue ? 'aria-current="page"' : '' ?>>
+                    <?= htmlspecialchars($filterLabel) ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
         <section class="task-list" aria-label="Tasks">
-            <?php foreach ($tasks as $task): ?>
+            <?php foreach ($visibleTasks as $task): ?>
                 <?php
                 $priorityClass = match ($task['priority']) {
                     'low' => 'priority-low',
@@ -129,6 +153,10 @@ $tasks = $repository->all();
                             type="hidden"
                             name="id"
                             value="<?= htmlspecialchars($task['id']) ?>">
+                        <input
+                            type="hidden"
+                            name="filter"
+                            value="<?= htmlspecialchars($filter) ?>">
 
                         <button
                             type="submit"
@@ -176,6 +204,10 @@ $tasks = $repository->all();
                             type="hidden"
                             name="id"
                             value="<?= htmlspecialchars($task['id']) ?>">
+                        <input
+                            type="hidden"
+                            name="filter"
+                            value="<?= htmlspecialchars($filter) ?>">
 
                         <label class="field">
                             <span>Edit title</span>
